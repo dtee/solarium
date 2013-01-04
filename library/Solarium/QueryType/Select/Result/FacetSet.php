@@ -62,6 +62,10 @@ class FacetSet implements \IteratorAggregate, \Countable
         $this->facets = $facets;
     }
 
+    public function setFacet($key, $facet) {
+        $this->facets[$key] = $facet;
+    }
+
     /**
      * Get a facet by key
      *
