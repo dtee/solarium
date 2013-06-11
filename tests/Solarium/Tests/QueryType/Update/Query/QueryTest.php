@@ -34,7 +34,7 @@ use Solarium\Core\Client\Client;
 use Solarium\QueryType\Update\Query\Query;
 use Solarium\QueryType\Update\Query\Command\Rollback;
 use Solarium\QueryType\Update\Query\Command\Commit;
-use Solarium\QueryType\Update\Query\Document;
+use Solarium\QueryType\Update\Query\Document\Document;
 
 class QueryTest extends \PHPUnit_Framework_TestCase
 {
@@ -261,6 +261,22 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testAddDeleteQueryWithBind()
+    {
+        $this->query->addDeleteQuery('id:%1%', array(678));
+        $commands = $this->query->getCommands();
+
+        $this->assertEquals(
+            Query::COMMAND_DELETE,
+            $commands[0]->getType()
+        );
+
+        $this->assertEquals(
+            array('id:678'),
+            $commands[0]->getQueries()
+        );
+    }
+
     public function testAddDeleteQueries()
     {
         $this->query->addDeleteQueries(array('id:1','id:2'));
@@ -455,12 +471,14 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $this->assertThat($doc, $this->isInstanceOf(__NAMESPACE__.'\\MyCustomDoc'));
     }
 
-    public function testCreateDocumentWithFieldsAndBoosts()
+    public function testCreateDocumentWithFieldsAndBoostsAndModifiers()
     {
         $fields = array('id' => 1, 'name' => 'testname');
         $boosts = array('name' => 2.7);
+        $modifiers = array('name' => 'set');
 
-        $doc = $this->query->createDocument($fields, $boosts);
+        $doc = $this->query->createDocument($fields, $boosts, $modifiers);
+        $doc->setKey('id');
 
         $this->assertThat($doc, $this->isInstanceOf($this->query->getDocumentClass()));
 
@@ -472,6 +490,11 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             2.7,
             $doc->getFieldBoost('name')
+        );
+
+        $this->assertEquals(
+            $modifiers['name'],
+            $doc->getFieldModifier('name')
         );
     }
 

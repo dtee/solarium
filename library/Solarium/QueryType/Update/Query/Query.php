@@ -49,6 +49,7 @@ use Solarium\QueryType\Update\Query\Command\Commit as CommitCommand;
 use Solarium\QueryType\Update\Query\Command\Delete as DeleteCommand;
 use Solarium\QueryType\Update\Query\Command\Optimize as OptimizeCommand;
 use Solarium\QueryType\Update\Query\Command\Rollback as RollbackCommand;
+use Solarium\QueryType\Update\Query\Document\DocumentInterface;
 
 /**
  * Update query
@@ -106,7 +107,7 @@ class Query extends BaseQuery
     protected $options = array(
         'handler'       => 'update',
         'resultclass'   => 'Solarium\QueryType\Update\Result',
-        'documentclass' => 'Solarium\QueryType\Update\Query\Document',
+        'documentclass' => 'Solarium\QueryType\Update\Query\Document\Document',
         'omitheader'    => false,
     );
 
@@ -276,10 +277,15 @@ class Query extends BaseQuery
      * create you own command instance and use the add method.
      *
      * @param  string $query
+     * @param  array  $bind  Bind values for placeholders in the query string
      * @return self   Provides fluent interface
      */
-    public function addDeleteQuery($query)
+    public function addDeleteQuery($query, $bind = null)
     {
+        if (!is_null($bind)) {
+            $query = $this->getHelper()->assemble($query, $bind);
+        }
+
         $delete = new DeleteCommand;
         $delete->addQuery($query);
 
@@ -480,13 +486,13 @@ class Query extends BaseQuery
      *
      * @param  array    $fields
      * @param  array    $boosts
-     * @return Document
+     * @param  array    $modifiers
+     * @return DocumentInterface
      */
-    public function createDocument($fields = array(), $boosts = array())
+    public function createDocument($fields = array(), $boosts = array(), $modifiers = array())
     {
         $class = $this->getDocumentClass();
-
-        return new $class($fields, $boosts);
+        return new $class($fields, $boosts, $modifiers);
     }
 
 }
